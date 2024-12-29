@@ -1,0 +1,40 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Build container images
+        run: |
+          docker build -t registry.digitalocean.com/ai-resume-builder/backend:$(echo $GITHUB_SHA | head -c7) ./backend
+          docker build -t registry.digitalocean.com/ai-resume-builder/frontend:$(echo $GITHUB_SHA | head -c7) ./frontend
+
+      - name: Log in to DigitalOcean Container Registry
+        run: doctl registry login --expiry-seconds 600
+
+      - name: Push images to DigitalOcean Container Registry
+        run: |
+          docker push registry.digitalocean.com/ai-resume-builder/backend:$(echo $GITHUB_SHA | head -c7)
+          docker push registry.digitalocean.com/ai-resume-builder/frontend:$(echo $GITHUB_SHA | head -c7)
+
+      - name: Update deployment file
+        run: |
+          TAG=$(echo $GITHUB_SHA | head -c7)
+          sed -i 's|<BACKEND_IMAGE>|registry.digitalocean.com/ai-resume-builder/backend:'${TAG}'|' $GITHUB_WORKSPACE/k8s/deployment.yml
+          sed -i 's|<FRONTEND_IMAGE>|registry.digitalocean.com/ai-resume-builder/frontend:'${TAG}'|' $GITHUB_WORKSPACE/k8s/deployment.yml
+
+      - name: Deploy to DigitalOcean Kubernetes
+        run: |
+          doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ai-resume-builder
+          kubectl apply -f $GITHUB_WORKSPACE/k8s/

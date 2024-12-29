@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5001';  // Updated port to match backend
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';  
 
 interface TailorResponse {
   original_resume: string;
@@ -40,8 +40,9 @@ export const tailorResume = async (resume: File, jobDescription: string): Promis
     return response.data as TailorResponse;
   } catch (error: any) {
     console.error('API Error:', error);
-    if (error.response?.data?.error) {
-      throw new Error(error.response.data.error);
+    if (axios.isAxiosError(error)) {
+      const errorMessage = error.response?.data?.error || error.message;
+      throw new Error(errorMessage);
     } else if (error.code === 'ECONNABORTED') {
       throw new Error('Request timed out. Please try again.');
     } else if (!navigator.onLine) {
