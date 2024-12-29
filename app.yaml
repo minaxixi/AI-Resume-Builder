@@ -1,0 +1,34 @@
+name: ai-resume-builder
+services:
+  - name: backend
+    environment_slug: python
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: minaxixi/AI-Resume-Builder
+    source_dir: backend
+    run_command: gunicorn app:app --bind 0.0.0.0:$PORT
+    envs:
+      - key: OPENAI_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: PYTHON_VERSION
+        scope: BUILD_TIME
+        value: "3.9"
+
+  - name: frontend
+    environment_slug: node-js
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: minaxixi/AI-Resume-Builder
+    source_dir: frontend
+    build_command: npm install && npm run build
+    run_command: serve -s build -l $PORT
+    envs:
+      - key: NODE_VERSION
+        scope: BUILD_TIME
+        value: "16"
+      - key: REACT_APP_API_URL
+        scope: BUILD_TIME
+        value: ${_self.BACKEND_URL}
