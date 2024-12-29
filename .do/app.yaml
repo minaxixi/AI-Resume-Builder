@@ -5,28 +5,33 @@ services:
       branch: main
       repo_clone_url: https://github.com/minaxixi/AI-Resume-Builder.git
     source_dir: backend
-    dockerfile_path: backend/Dockerfile
-    http_port: 5001
-    instance_count: 1
-    instance_size_slug: basic-xs
+    environment_slug: python
+    buildpacks:
+      - name: python
+    run_command: gunicorn app:app --bind 0.0.0.0:8080
     envs:
       - key: OPENAI_API_KEY
         scope: RUN_TIME
         type: SECRET
         value: ${OPENAI_API_KEY}
+      - key: PYTHON_VERSION
+        scope: BUILD_TIME
+        value: "3.9"
 
   - name: frontend
     git:
       branch: main
       repo_clone_url: https://github.com/minaxixi/AI-Resume-Builder.git
     source_dir: frontend
-    dockerfile_path: frontend/Dockerfile
-    http_port: 80
-    instance_count: 1
-    instance_size_slug: basic-xs
-    routes:
-      - path: /
+    environment_slug: node-js
+    buildpacks:
+      - name: nodejs
+    build_command: npm run build
+    run_command: serve -s build
     envs:
+      - key: NODE_VERSION
+        scope: BUILD_TIME
+        value: "16"
       - key: REACT_APP_API_URL
         scope: BUILD_TIME
         value: ${APP_URL}
