@@ -60,7 +60,7 @@ def extract_text_from_url(url):
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    return jsonify({"status": "healthy", "message": "Server is running"}), 200
+    return jsonify({"status": "healthy"}), 200
 
 @app.route('/tailor-resume', methods=['POST'])
 def tailor_resume():
