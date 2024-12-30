@@ -26,15 +26,36 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+# Get environment-specific settings
+ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
+FRONTEND_URL = os.getenv('FRONTEND_URL', '')
+
 # Configure CORS
+allowed_origins = [
+    'http://localhost:3000',     # Local React development
+    'http://localhost:5001',     # Local Flask development
+    'http://localhost:8080',     # Production port
+    'https://localhost:8080',    # Production port with HTTPS
+    FRONTEND_URL                 # Production frontend URL from env
+]
+
+logger.info(f"Allowed CORS origins: {allowed_origins}")
+logger.info(f"Environment: {ENVIRONMENT}")
+logger.info(f"Frontend URL: {FRONTEND_URL}")
+
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:3000", "http://localhost:5001", "http://localhost"],
+        "origins": allowed_origins,
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type"],
         "supports_credentials": False
     }
 })
+
+@app.before_request
+def log_request_info():
+    logger.debug('Headers: %s', dict(request.headers))
+    logger.debug('Body: %s', request.get_data())
 
 pdf_parser = PDFParser()
 resume_tailor = ResumeTailor()

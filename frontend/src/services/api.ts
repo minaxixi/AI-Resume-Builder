@@ -1,6 +1,14 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';  
+// In development, use localhost:5001
+// In production, use the environment variable or default to port 8080
+const isDevelopment = process.env.NODE_ENV === 'development';
+const API_URL = isDevelopment 
+  ? (process.env.REACT_APP_API_URL || 'http://localhost:5001')
+  : (process.env.REACT_APP_API_URL || window.location.origin);
+
+console.log('API URL:', API_URL);
+console.log('Environment:', process.env.NODE_ENV);
 
 export interface TailorResponse {
   original_text: string;
@@ -28,7 +36,7 @@ export const uploadAndTailorResume = async (
         'Content-Type': 'multipart/form-data',
       },
       timeout: 30000,
-      withCredentials: false 
+      withCredentials: false
     });
 
     console.log('Response:', response.data);
@@ -46,7 +54,12 @@ export const uploadAndTailorResume = async (
       console.error('Axios error details:', {
         message: error.message,
         response: error.response?.data,
-        status: error.response?.status
+        status: error.response?.status,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        }
       });
       if (error.code === 'ECONNABORTED') {
         throw new Error('Request timed out. The server is taking too long to respond. Please try again.');
