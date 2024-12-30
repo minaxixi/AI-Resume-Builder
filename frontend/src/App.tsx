@@ -19,19 +19,16 @@ import {
   HStack,
   useToast,
 } from '@chakra-ui/react';
-import { tailorResume } from './services/api';
+import { uploadAndTailorResume, TailorResponse } from './services/api';
 import DiffView from './components/DiffView';
 
-interface ResumeResult {
-  original_resume: string;
-  tailored_resume: string;
-}
+interface AppProps {}
 
-function App() {
+function App(props: AppProps) {
   const [file, setFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<ResumeResult | null>(null);
+  const [result, setResult] = useState<TailorResponse | null>(null);
   const [showDiff, setShowDiff] = useState(false);
   const toast = useToast();
 
@@ -61,7 +58,7 @@ function App() {
 
     setIsLoading(true);
     try {
-      const response = await tailorResume(file, jobDescription);
+      const response = await uploadAndTailorResume(file, jobDescription);
       setResult(response);
       toast({
         title: 'Success',
@@ -196,7 +193,7 @@ function App() {
                       maxHeight="800px"
                       overflowY="auto"
                     >
-                      {typeof result.original_resume === 'string' ? result.original_resume : ''}
+                      {result.original_text}
                     </Box>
                   </CardBody>
                 </Card>
@@ -207,8 +204,8 @@ function App() {
                   </CardHeader>
                   <CardBody>
                     <DiffView
-                      originalText={typeof result.original_resume === 'string' ? result.original_resume : ''}
-                      newText={typeof result.tailored_resume === 'string' ? result.tailored_resume : ''}
+                      originalText={result.original_text}
+                      newText={result.enhanced_text}
                       showDiff={showDiff}
                     />
                   </CardBody>

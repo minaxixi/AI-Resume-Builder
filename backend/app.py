@@ -1,5 +1,6 @@
 import os
 import logging
+import sys
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from services.pdf_parser import PDFParser
@@ -9,28 +10,29 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from urllib.parse import urlparse
+import traceback
 
 load_dotenv()
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Configure CORS to accept requests from App Platform domains
-allowed_origins = [
-    'http://localhost:3000',  # Local development
-    'http://localhost',
-    os.getenv('FRONTEND_URL', ''),  # Production frontend URL
-    'https://*.ondigitalocean.app'  # All DigitalOcean App Platform URLs
-]
-
+# Configure CORS
 CORS(app, resources={
     r"/*": {
-        "origins": allowed_origins,
+        "origins": ["http://localhost:3000", "http://localhost:5001", "http://localhost"],
         "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
+        "allow_headers": ["Content-Type"],
+        "supports_credentials": False
     }
 })
 
@@ -60,7 +62,7 @@ def extract_text_from_url(url):
         
         return text
     except Exception as e:
-        logger.error(f"Error extracting text from URL: {str(e)}")
+        logger.error(f"Error extracting text from URL: {str(e)}", exc_info=True)
         return None
 
 @app.route('/health', methods=['GET'])
@@ -72,17 +74,19 @@ def health_check():
 def tailor_resume():
     try:
         logger.debug("Received request to /tailor-resume")
+        logger.debug(f"Form data: {request.form}")
+        logger.debug(f"Files: {request.files}")
         
         if 'resume' not in request.files:
             logger.error("No resume file in request")
             return jsonify({"error": "No resume file provided"}), 400
             
-        if 'job_description' not in request.form:
-            logger.error("No job description URL provided")
-            return jsonify({"error": "No job description URL provided"}), 400
+        if 'job_url' not in request.form:
+            logger.error("No job URL provided")
+            return jsonify({"error": "No job URL provided"}), 400
 
         resume_file = request.files['resume']
-        job_url = request.form['job_description']
+        job_url = request.form['job_url']
         
         logger.debug(f"Processing resume file: {resume_file.filename}")
         logger.debug(f"Job URL: {job_url}")
@@ -116,11 +120,15 @@ def tailor_resume():
         result = resume_tailor.tailor_resume(resume_text, job_description)
         logger.debug("Successfully tailored resume")
         
-        return jsonify(result), 200
+        return jsonify({
+            'original_text': resume_text,
+            'enhanced_text': result['enhanced_text']
+        }), 200
 
     except Exception as e:
         logger.error(f"Error in tailor_resume: {str(e)}", exc_info=True)
-        return jsonify({"error": "An error occurred while processing your request", "details": str(e)}), 500
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5001))

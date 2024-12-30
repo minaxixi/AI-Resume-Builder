@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';  
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';  
 
-interface TailorResponse {
+export interface TailorResponse {
   original_text: string;
   enhanced_text: string;
 }
@@ -16,6 +16,9 @@ export const uploadAndTailorResume = async (
   jobUrl: string
 ): Promise<TailorResponse> => {
   try {
+    console.log('Making request to:', `${API_URL}/tailor-resume`);
+    console.log('With job URL:', jobUrl);
+    
     const formData = new FormData();
     formData.append('resume', file);
     formData.append('job_url', jobUrl);
@@ -24,18 +27,27 @@ export const uploadAndTailorResume = async (
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      timeout: 30000
+      timeout: 30000,
+      withCredentials: false 
     });
 
+    console.log('Response:', response.data);
     const data = response.data;
 
     if ('error' in data) {
+      console.error('Server returned error:', data.error);
       throw new Error(data.error);
     }
 
     return data as TailorResponse;
   } catch (error) {
+    console.error('Full error:', error);
     if (axios.isAxiosError(error)) {
+      console.error('Axios error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       if (error.code === 'ECONNABORTED') {
         throw new Error('Request timed out. The server is taking too long to respond. Please try again.');
       }
