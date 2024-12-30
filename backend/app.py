@@ -36,8 +36,13 @@ allowed_origins = [
     'http://localhost:5001',     # Local Flask development
     'http://localhost:8080',     # Production port
     'https://localhost:8080',    # Production port with HTTPS
-    FRONTEND_URL                 # Production frontend URL from env
+    FRONTEND_URL,               # Production frontend URL from env
+    'https://jellycat-app-7yp9f.ondigitalocean.app',  # Your DigitalOcean app URL
+    'http://jellycat-app-7yp9f.ondigitalocean.app'   # Your DigitalOcean app URL (HTTP)
 ]
+
+# Remove empty strings and None values
+allowed_origins = [origin for origin in allowed_origins if origin]
 
 logger.info(f"Allowed CORS origins: {allowed_origins}")
 logger.info(f"Environment: {ENVIRONMENT}")
