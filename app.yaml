@@ -8,6 +8,7 @@ services:
       branch: main
       repo_clone_url: https://github.com/minaxixi/AI-Resume-Builder.git
     source_dir: backend
+    run_command: gunicorn app:app --bind 0.0.0.0:8080 --log-level debug
     envs:
       - key: OPENAI_API_KEY
         scope: RUN_TIME
