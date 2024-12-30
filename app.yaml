@@ -1,0 +1,28 @@
+name: ai-resume-builder
+region: sfo
+services:
+  - name: backend
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    git:
+      branch: main
+      repo_clone_url: https://github.com/minaxixi/AI-Resume-Builder.git
+    source_dir: backend
+    envs:
+      - key: OPENAI_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+
+  - name: frontend
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    git:
+      branch: main
+      repo_clone_url: https://github.com/minaxixi/AI-Resume-Builder.git
+    source_dir: frontend
+    build_command: npm install && npm run build
+    run_command: npx serve -s build -l $PORT
+    envs:
+      - key: REACT_APP_API_URL
+        scope: BUILD_TIME
+        value: ${_self.BACKEND_URL}
