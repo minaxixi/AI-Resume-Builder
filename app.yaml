@@ -20,7 +20,7 @@ services:
       branch: main
       repo_clone_url: https://github.com/minaxixi/AI-Resume-Builder.git
     source_dir: frontend
-    build_command: npm ci && npm run build
+    build_command: npm install --legacy-peer-deps && npm run build
     run_command: npx serve -s build -l $PORT
     envs:
       - key: REACT_APP_API_URL
@@ -29,3 +29,6 @@ services:
       - key: CI
         scope: BUILD_TIME
         value: "false"
+      - key: NODE_ENV
+        scope: BUILD_TIME
+        value: "production"
