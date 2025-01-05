@@ -21,24 +21,19 @@ logconfig_dict = {
         '': {  # Root logger
             'handlers': ['console'],
             'level': 'DEBUG',
-        },
-        'gunicorn.error': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'gunicorn.access': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
+            'propagate': True
         },
     }
 }
 
 # Gunicorn config
 bind = "0.0.0.0:8080"
-workers = 2
-timeout = 120  # Increased timeout for long-running requests
+timeout = 120  # Increase worker timeout to 120 seconds
+keepalive = 65  # Keep connections alive for 65 seconds
+graceful_timeout = 120  # Grace period for workers to finish serving requests
+workers = 2  # Number of worker processes
+worker_class = 'sync'  # Use sync workers as they handle long-running tasks better
+threads = 1  # Threads per worker
 capture_output = True
 enable_stdio_inheritance = True
 accesslog = '-'  # Log to stdout

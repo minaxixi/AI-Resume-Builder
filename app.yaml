@@ -22,7 +22,7 @@ services:
         value: production
 
   - name: backend
-    instance_size_slug: basic-xxs
+    instance_size_slug: basic-xs  # Upgraded from basic-xxs for better performance
     instance_count: 1
     git:
       branch: main

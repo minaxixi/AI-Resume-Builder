@@ -58,7 +58,7 @@ class LLMAgent(ABC):
             system_prompt = self.get_system_prompt()
             logger.debug("Created prompt")
             
-            # Call OpenAI API
+            # Call OpenAI API with timeout handling
             try:
                 logger.debug("Calling OpenAI API")
                 response = openai.ChatCompletion.create(
@@ -71,7 +71,8 @@ class LLMAgent(ABC):
                     max_tokens=4000,
                     top_p=0.9,
                     frequency_penalty=0.0,
-                    presence_penalty=0.0
+                    presence_penalty=0.0,
+                    request_timeout=90  # Set OpenAI client timeout to 90 seconds
                 )
                 logger.debug("Received response from OpenAI API")
             except Exception as e:

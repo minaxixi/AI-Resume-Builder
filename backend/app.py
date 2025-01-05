@@ -93,6 +93,7 @@ def extract_text_from_url(url):
 
 @app.route('/health', methods=['GET'])
 def health_check():
+    """Health check endpoint for DigitalOcean."""
     logger.debug("Received request to /health")
     return jsonify({"status": "healthy"}), 200
 
